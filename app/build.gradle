@@ -12,15 +12,27 @@ android {
         minSdkVersion 15
         targetSdkVersion 28
         versionCode 1
-        versionName "1.0"
+        versionName "0.0.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    signingConfigs {
+        release {
+            storeFile file("keystore.jks")
+            storePassword "keystore@LogicalThinking"
+            keyAlias "LogicalThinking"
+            keyPassword "keystore@LogicalThinking"
+        }
     }
     buildTypes {
         release {
-            minifyEnabled false
+            signingConfig signingConfigs.release
+            minifyEnabled true//开启混淆
+            useProguard true//代码压缩
+            shrinkResources false//资源压缩
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
 }
 
 dependencies {
