@@ -1,5 +1,6 @@
 package com.agilezhu.logicalthinking
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
@@ -12,13 +13,20 @@ import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
+import cn.leancloud.AVObject
+import cn.leancloud.AVQuery
 import com.agilezhu.logicalthinking.bean.QuestionDataBean
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.content_main.*
+
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     val mAdapter = ViewPagerAdapter(this)
 
+    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -46,17 +54,40 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         mHomeDataViewPager.adapter = mAdapter
 
-        val datas = ArrayList<QuestionDataBean>()
-        for (index: Int in 0..20) {
-            val data = QuestionDataBean()
-            data.question = "假设有一个池塘，里面有无穷多的水。现有2个空水壶，容积分别为5升和6升。问题是如何只用这2个水壶从池塘里取得3升的水。"
-            data.answer = "1、先把5升的灌满，倒在6升里，这时6升的壶里有5升水 \n" +
-                    "2.再把5升的灌满，用5升的壶把6升的灌满，这时5升的壶里剩4升水 \n" +
-                    "3.把6升的水倒掉，再把5升壶里剩余的水倒入6升的壶里，这时6升的壶里有4升水 \n" +
-                    "4.把5升壶灌满，倒入6升的壶，5-2=3 "
-            datas.add(data)
-        }
-        mAdapter.initData(datas)
+//        val datas = ArrayList<QuestionDataBean>()
+//        for (index: Int in 0..20) {
+//            val data = QuestionDataBean()
+//            data.question = "假设有一个池塘，里面有无穷多的水。现有2个空水壶，容积分别为5升和6升。问题是如何只用这2个水壶从池塘里取得3升的水。"
+//            data.answer = "1、先把5升的灌满，倒在6升里，这时6升的壶里有5升水 \n" +
+//                    "2.再把5升的灌满，用5升的壶把6升的灌满，这时5升的壶里剩4升水 \n" +
+//                    "3.把6升的水倒掉，再把5升壶里剩余的水倒入6升的壶里，这时6升的壶里有4升水 \n" +
+//                    "4.把5升壶灌满，倒入6升的壶，5-2=3 "
+//            datas.add(data)
+//        }
+//        mAdapter.initData(datas)
+
+
+        AVQuery<AVObject>("question").findInBackground().subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                val datas = ArrayList<QuestionDataBean>()
+                for (data: AVObject in it) {
+                    val tmp = QuestionDataBean()
+                    tmp.question = data["question"] as String
+                    tmp.answer = data["answer"] as String
+                    datas.add(tmp)
+                }
+                mAdapter.initData(datas)
+//                Toast.makeText(this, it.toString(), Toast.LENGTH_LONG).show()
+            }, {
+                Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
+            })
+
+
+//        val testObject = AVObject("question")
+//        testObject.put("question", "Hello world!")
+//        testObject.put("answer", "Hello world!")
+//        testObject.saveInBackground().blockingSubscribe()
     }
 
     override fun onBackPressed() {
